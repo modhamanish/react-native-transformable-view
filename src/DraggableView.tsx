@@ -1,11 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   runOnJS,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 interface DraggableViewProps {
   id: string;
@@ -64,18 +64,18 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       startY.value = translateY.value;
       runOnJS(onSelect)(id);
     })
-    .onUpdate(event => {
+    .onUpdate((event) => {
       const newX = startX.value + event.translationX;
       const newY = startY.value + event.translationY;
 
       // Constrain within container
       translateX.value = Math.max(
         0,
-        Math.min(containerWidth - width.value, newX),
+        Math.min(containerWidth - width.value, newX)
       );
       translateY.value = Math.max(
         0,
-        Math.min(containerHeight - height.value, newY),
+        Math.min(containerHeight - height.value, newY)
       );
     });
 
@@ -103,13 +103,13 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
 
   // Resize gesture (diagonal)
   const resizeGesture = Gesture.Pan()
-    .onStart(event => {
+    .onStart((event) => {
       startWidth.value = width.value;
       startHeight.value = height.value;
       startX.value = translateX.value;
       startY.value = translateY.value;
     })
-    .onUpdate(event => {
+    .onUpdate((event) => {
       // Calculate new dimensions based on diagonal drag, accounting for rotation
       const cos = Math.cos(rotation.value);
       const sin = Math.sin(rotation.value);
@@ -189,7 +189,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       startX.value = translateX.value;
       startY.value = translateY.value;
     })
-    .onUpdate(event => {
+    .onUpdate((event) => {
       const cos = Math.cos(rotation.value);
       const sin = Math.sin(rotation.value);
 
@@ -217,7 +217,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       startX.value = translateX.value;
       startY.value = translateY.value;
     })
-    .onUpdate(event => {
+    .onUpdate((event) => {
       const cos = Math.cos(rotation.value);
       const sin = Math.sin(rotation.value);
 
@@ -244,7 +244,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
   const rotateGesture = Gesture.Pan()
     .minDistance(0)
     .onStart(() => {
-      'worklet';
+      "worklet";
       // Calculate vector from Center to Button (Bottom-Left) in Local Coords
       // Container size is (w + 2*offset, h + 2*offset)
       // Button is at Bottom-Left of container: (-Wc/2, Hc/2) relative to center
@@ -267,8 +267,8 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       startVectorY.value = screenVy;
       startRotation.value = rot;
     })
-    .onUpdate(event => {
-      'worklet';
+    .onUpdate((event) => {
+      "worklet";
       // Current vector = Start Vector + Translation
       const currentVx = startVectorX.value + event.translationX;
       const currentVy = startVectorY.value + event.translationY;
@@ -295,7 +295,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
         { translateX: translateX.value },
         { translateY: translateY.value },
         { rotate: `${rotation.value}rad` }, // Use radians not degrees
-      ],
+      ] as any,
       width: width.value,
       height: height.value,
     };
@@ -307,7 +307,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
         { translateX: translateX.value - BUTTON_OFFSET },
         { translateY: translateY.value - BUTTON_OFFSET },
         { rotate: `${rotation.value}rad` }, // Use radians not degrees
-      ],
+      ] as any,
       width: width.value + BUTTON_OFFSET * 2,
       height: height.value + BUTTON_OFFSET * 2,
     };
@@ -414,35 +414,35 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
 
 const styles = StyleSheet.create({
   draggableView: {
-    position: 'absolute',
-    backgroundColor: '#4A90E2',
+    position: "absolute",
+    backgroundColor: "#4A90E2",
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   selected: {
     borderWidth: 2,
-    borderColor: '#FFD700',
-    borderStyle: 'dashed',
+    borderColor: "#FFD700",
+    borderStyle: "dashed",
   },
   defaultContent: {
     flex: 1,
-    width: '100%',
-    backgroundColor: 'transparent',
+    width: "100%",
+    backgroundColor: "transparent",
   },
   buttonContainer: {
-    position: 'absolute',
-    pointerEvents: 'box-none',
+    position: "absolute",
+    pointerEvents: "box-none",
   },
   actionButton: {
-    position: 'absolute',
+    position: "absolute",
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
     borderRadius: BUTTON_SIZE / 2,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -467,12 +467,12 @@ const styles = StyleSheet.create({
   },
   bottomCenter: {
     bottom: 0,
-    left: '50%',
+    left: "50%",
     marginLeft: -BUTTON_SIZE / 2,
   },
   rightCenter: {
     right: 0,
-    top: '50%',
+    top: "50%",
     marginTop: -BUTTON_SIZE / 2,
   },
   emoji: {
