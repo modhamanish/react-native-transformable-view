@@ -1,6 +1,6 @@
 {
   "name": "@modhamanish/react-native-transformable-view",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A React Native Transformable View component that enables intuitive drag, rotate, and scale interactions on any view.",
   "main": "index.js",
   "scripts": {
