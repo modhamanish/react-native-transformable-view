@@ -1,3 +1,3 @@
-import { DraggableView } from "./src/DraggableView";
+import { DraggableView as TransformableView } from "./src/DraggableView";
 
-export default DraggableView;
+export default TransformableView;
