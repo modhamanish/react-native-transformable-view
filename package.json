@@ -12,11 +12,25 @@
     "url": "git+https://github.com/modhamanish/react-native-transformable-view.git"
   },
   "keywords": [
+    "react-native",
+    "react-native-component",
     "transformable-view",
-    "rotation",
-    "dragging",
+    "draggable",
+    "resizable",
+    "rotatable",
     "scale",
-    "resize"
+    "gesture",
+    "gesture-handler",
+    "reanimated",
+    "animation",
+    "interaction",
+    "touch",
+    "manipulation",
+    "sticker",
+    "image-editor",
+    "drag-drop",
+    "pinch-zoom",
+    "ui-component"
   ],
   "author": "Modha Manish",
   "license": "ISC",
