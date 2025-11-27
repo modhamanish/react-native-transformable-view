@@ -5,6 +5,9 @@ A powerful and smooth **React Native Transformable View** component that enables
 <div align="center">
   <img src="assets/transformable_view_demo.gif" style="max-width: 50%;" alt="Demo" />
 </div>
+<div align="center">
+  <video controls src="assets/transformable_view_demo.mov" style="max-width: 50%;" alt="Demo" />
+</div>
 
 ## Features
 
