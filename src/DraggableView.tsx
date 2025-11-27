@@ -57,7 +57,7 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
   const startRotation = useSharedValue(0);
   const startScale = useSharedValue(1);
 
-  // Main view drag gesture
+  // Main view dragGesture gesture
   const dragGesture = Gesture.Pan()
     .onStart(() => {
       startX.value = translateX.value;
@@ -68,15 +68,54 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       const newX = startX.value + event.translationX;
       const newY = startY.value + event.translationY;
 
-      // Constrain within container
-      translateX.value = Math.max(
-        0,
-        Math.min(containerWidth - width.value, newX)
+      // Calculate center of the view
+      const cx = newX + width.value / 2;
+      const cy = newY + height.value / 2;
+
+      // Calculate corners relative to center
+      const w2 = width.value / 2;
+      const h2 = height.value / 2;
+      const cos = Math.cos(rotation.value);
+      const sin = Math.sin(rotation.value);
+
+      // 4 corners relative to center
+      // TL: -w2, -h2
+      // TR: w2, -h2
+      // BR: w2, h2
+      // BL: -w2, h2
+      const x1 = -w2 * cos - -h2 * sin;
+      const y1 = -w2 * sin + -h2 * cos;
+
+      const x2 = w2 * cos - -h2 * sin;
+      const y2 = w2 * sin + -h2 * cos;
+
+      const x3 = w2 * cos - h2 * sin;
+      const y3 = w2 * sin + h2 * cos;
+
+      const x4 = -w2 * cos - h2 * sin;
+      const y4 = -w2 * sin + h2 * cos;
+
+      // Bounding box relative to center
+      const minRelX = Math.min(x1, x2, x3, x4);
+      const maxRelX = Math.max(x1, x2, x3, x4);
+      const minRelY = Math.min(y1, y2, y3, y4);
+      const maxRelY = Math.max(y1, y2, y3, y4);
+
+      // Constrain center
+      // cx + minRelX >= 0  =>  cx >= -minRelX
+      // cx + maxRelX <= containerWidth  =>  cx <= containerWidth - maxRelX
+      const constrainedCx = Math.max(
+        -minRelX,
+        Math.min(containerWidth - maxRelX, cx)
       );
-      translateY.value = Math.max(
-        0,
-        Math.min(containerHeight - height.value, newY)
+
+      const constrainedCy = Math.max(
+        -minRelY,
+        Math.min(containerHeight - maxRelY, cy)
       );
+
+      translateX.value = constrainedCx - width.value / 2;
+      translateY.value = constrainedCy - height.value / 2;
     });
 
   const tapGesture = Gesture.Tap()
@@ -100,6 +139,56 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       runOnJS(onCopy)(id);
     }
   });
+
+  // Helper to constrain view within boundaries
+  const clampToBoundaries = (
+    w: number,
+    h: number,
+    r: number,
+    tx: number,
+    ty: number
+  ) => {
+    "worklet";
+    const cx = tx + w / 2;
+    const cy = ty + h / 2;
+    const w2 = w / 2;
+    const h2 = h / 2;
+    const cos = Math.cos(r);
+    const sin = Math.sin(r);
+
+    const x1 = -w2 * cos - -h2 * sin;
+    const y1 = -w2 * sin + -h2 * cos;
+    const x2 = w2 * cos - -h2 * sin;
+    const y2 = w2 * sin + -h2 * cos;
+    const x3 = w2 * cos - h2 * sin;
+    const y3 = w2 * sin + h2 * cos;
+    const x4 = -w2 * cos - h2 * sin;
+    const y4 = -w2 * sin + h2 * cos;
+
+    const minRelX = Math.min(x1, x2, x3, x4);
+    const maxRelX = Math.max(x1, x2, x3, x4);
+    const minRelY = Math.min(y1, y2, y3, y4);
+    const maxRelY = Math.max(y1, y2, y3, y4);
+
+    const bboxW = maxRelX - minRelX;
+    const bboxH = maxRelY - minRelY;
+
+    const constrainedCx = Math.max(
+      -minRelX,
+      Math.min(containerWidth - maxRelX, cx)
+    );
+    const constrainedCy = Math.max(
+      -minRelY,
+      Math.min(containerHeight - maxRelY, cy)
+    );
+
+    return {
+      x: constrainedCx - w / 2,
+      y: constrainedCy - h / 2,
+      bboxW,
+      bboxH,
+    };
+  };
 
   // Resize gesture (diagonal)
   const resizeGesture = Gesture.Pan()
@@ -158,27 +247,52 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       const newHeight = startHeight.value * newScale;
       // *********** End width and height scale update same as aspect ratio ***********
 
+      // *********** Start width and height update ***********
       // If you want to keep update the width and height
       // const newWidth = Math.max(30, startWidth.value + dx);
       // const newHeight = Math.max(30, startHeight.value + dy);
+      // *********** End width and height update ***********
 
-      // *********** Start width and height update ***********
       // Calculate delta width/height
       const dw = newWidth - startWidth.value;
       const dh = newHeight - startHeight.value;
-      // *********** End width and height update ***********
 
       // Calculate shift required to keep Top-Left corner fixed
       // When size changes, center shifts. We must adjust position to compensate.
       const shiftX = dw / 2 - (dw / 2) * cos + (dh / 2) * sin;
       const shiftY = dh / 2 - (dw / 2) * sin - (dh / 2) * cos;
 
+      const targetX = startX.value - shiftX;
+      const targetY = startY.value - shiftY;
+
+      const constrained = clampToBoundaries(
+        newWidth,
+        newHeight,
+        rotation.value,
+        targetX,
+        targetY
+      );
+
+      // Check if size fits in container
+      if (
+        constrained.bboxW > containerWidth ||
+        constrained.bboxH > containerHeight
+      ) {
+        return;
+      }
+
+      // Check if position was shifted (hit a wall)
+      if (
+        Math.abs(constrained.x - targetX) > 1 ||
+        Math.abs(constrained.y - targetY) > 1
+      ) {
+        return;
+      }
+
       width.value = newWidth;
       height.value = newHeight;
-
-      // Adjust position to keep anchor fixed
-      translateX.value = startX.value - shiftX;
-      translateY.value = startY.value - shiftY;
+      translateX.value = constrained.x;
+      translateY.value = constrained.y;
     });
 
   // Height resize gesture (Bottom Center)
@@ -204,9 +318,36 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       const shiftX = dw / 2 - (dw / 2) * cos + (dh / 2) * sin;
       const shiftY = dh / 2 - (dw / 2) * sin - (dh / 2) * cos;
 
+      const targetX = startX.value - shiftX;
+      const targetY = startY.value - shiftY;
+
+      const constrained = clampToBoundaries(
+        width.value,
+        newHeight,
+        rotation.value,
+        targetX,
+        targetY
+      );
+
+      // Check if size fits in container
+      if (
+        constrained.bboxW > containerWidth ||
+        constrained.bboxH > containerHeight
+      ) {
+        return;
+      }
+
+      // Check if position was shifted (hit a wall)
+      if (
+        Math.abs(constrained.x - targetX) > 1 ||
+        Math.abs(constrained.y - targetY) > 1
+      ) {
+        return;
+      }
+
       height.value = newHeight;
-      translateX.value = startX.value - shiftX;
-      translateY.value = startY.value - shiftY;
+      translateX.value = constrained.x;
+      translateY.value = constrained.y;
     });
 
   // Width resize gesture (Right Center)
@@ -232,9 +373,36 @@ export const DraggableView: React.FC<DraggableViewProps> = ({
       const shiftX = dw / 2 - (dw / 2) * cos + (dh / 2) * sin;
       const shiftY = dh / 2 - (dw / 2) * sin - (dh / 2) * cos;
 
+      const targetX = startX.value - shiftX;
+      const targetY = startY.value - shiftY;
+
+      const constrained = clampToBoundaries(
+        newWidth,
+        height.value,
+        rotation.value,
+        targetX,
+        targetY
+      );
+
+      // Check if size fits in container
+      if (
+        constrained.bboxW > containerWidth ||
+        constrained.bboxH > containerHeight
+      ) {
+        return;
+      }
+
+      // Check if position was shifted (hit a wall)
+      if (
+        Math.abs(constrained.x - targetX) > 1 ||
+        Math.abs(constrained.y - targetY) > 1
+      ) {
+        return;
+      }
+
       width.value = newWidth;
-      translateX.value = startX.value - shiftX;
-      translateY.value = startY.value - shiftY;
+      translateX.value = constrained.x;
+      translateY.value = constrained.y;
     });
 
   // Rotate gesture - robust vector-based tracking
@@ -476,6 +644,6 @@ const styles = StyleSheet.create({
     marginTop: -BUTTON_SIZE / 2,
   },
   emoji: {
-    fontSize: 16,
+    fontSize: 14,
   },
 });
