@@ -3,9 +3,7 @@
 A powerful and smooth **React Native Transformable View** component that enables intuitive drag, rotate, and scale interactions on any view. Built with `react-native-reanimated` and `react-native-gesture-handler`, it provides native-like performance for complex gestures.
 
 <div align="center">
-  <video src="assets/transformable_view_demo.mov" controls="controls" muted="muted" style="max-width: 100%;">
-    <a href="assets/transformable_view_demo.mov">Watch Demo Video</a>
-  </video>
+  <img src="assets/transformable_view_demo.gif" style="max-width: 50%;" alt="Demo" />
 </div>
 
 ## Features
